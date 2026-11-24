@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code editor | junior code</title>
+  <style>
+    :root {
+      --speed: 0.4s;
+      --accent: #12b5cb;
+      --panel: #0d1530;
+      --panel-2: #131c3d;
+      --line: rgba(255, 255, 255, 0.1);
+      --muted: #9fb0d6;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      color: white;
+      background: linear-gradient(135deg, #1551B5, #081642);
+      font-family: Tahoma, sans-serif;
+    }
+
+    /* ===== الشريط العلوي ===== */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #3b82f6;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 14px;
+    }
+
+    .title {
+      font-size: 14px;
+      color: var(--muted);
+      margin-inline-start: 6px;
+    }
+
+    .spacer { flex: 1; }
+
+    .btn {
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: bold;
+      border-radius: 10px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background var(--speed), color var(--speed);
+    }
+
+    a.btn {
+      display: inline-block;
+      text-decoration: none;
+    }
+
+    .btn-run {
+      background: var(--accent);
+      color: white;
+      border: 1px solid var(--accent);
+    }
+
+    .btn-run:hover { background: #0e9db0; }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(18, 181, 203, 0.12);
+    }
+
+    /* ===== المساحة الرئيسية ===== */
+    .workspace {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 12px;
+    }
+
+    .pane {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    /* تابات المحرر */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 8px 8px 0;
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tab {
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: 10px 10px 0 0;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: color var(--speed), background var(--speed);
+    }
+
+    .tab:hover { color: white; }
+
+    .tab[aria-selected="true"] {
+      color: white;
+      background: var(--panel);
+      border-color: var(--line);
+    }
+
+    .editor {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      resize: none;
+      border: none;
+      outline: none;
+      background: var(--panel);
+      color: #e6edff;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 14px;
+      tab-size: 2;
+      white-space: pre;
+      overflow: auto;
+      direction: ltr;
+      text-align: left;
+    }
+
+    .editor[hidden] { display: none; }
+
+    .editor:focus-visible {
+      box-shadow: inset 0 0 0 2px var(--accent);
+    }
+
+    /* العمود التاني: المعاينة + الكونسول */
+    .right {
+      display: grid;
+      grid-template-rows: 1fr 160px;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .pane-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--muted);
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .link-btn {
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--accent);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .link-btn:hover { text-decoration: underline; }
+
+    iframe {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      border: none;
+      background: white;
+    }
+
+    .console {
+      flex: 1;
+      min-height: 0;
+      margin: 0;
+      padding: 10px 14px;
+      overflow: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      direction: ltr;
+      text-align: left;
+    }
+
+    .console div { white-space: pre-wrap; word-break: break-word; }
+    .console .log   { color: #e6edff; }
+    .console .warn  { color: #fbbf24; }
+    .console .error { color: #f87171; }
+    .console .empty { color: var(--muted); }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 6px 14px;
+      border-top: 1px solid var(--line);
+      background: var(--panel-2);
+    }
+
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid #ffffff;
+      outline-offset: 2px;
+    }
+
+    /* وضع HTML بس: المعاينة لوحدها من غير كونسول */
+    .html-only .right { grid-template-rows: 1fr; }
+
+    /* وضع التحدي: المعاينة فوق ولوحة التحدي تحتها */
+    .challenge-mode .right { grid-template-rows: minmax(160px, 1fr) auto; }
+
+    .challenge-body {
+      padding: 14px 16px;
+      overflow: auto;
+      max-height: 320px;
+    }
+
+    .challenge-task {
+      margin: 0 0 12px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #dbe2f2;
+    }
+
+    .challenge-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .challenge-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: #c3cadb;
+    }
+
+    .challenge-list li::before {
+      content: "";
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: bold;
+      color: white;
+    }
+
+    .challenge-list li.pass {
+      color: white;
+    }
+
+    .challenge-list li.pass::before {
+      content: "\2713";
+      background: #22c55e;
+      border-color: #22c55e;
+    }
+
+    .challenge-win {
+      margin-top: 14px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: bold;
+      color: #34d399;
+      background: rgba(52, 211, 153, 0.1);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+      border-radius: 10px;
+    }
+
+    .challenge-win[hidden] { display: none; }
+
+    /* زرار Finish والمربع اللي بيطلع في النص */
+    .btn-run.finish { background: #22c55e; border-color: #22c55e; }
+    .btn-run.finish:hover { background: #16a34a; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: rgba(3, 8, 30, 0.75);
+    }
+
+    .modal {
+      width: min(420px, 100%);
+      padding: 30px 26px;
+      text-align: center;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-icon {
+      display: grid;
+      place-items: center;
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      font-size: 32px;
+      font-weight: bold;
+      color: #ffffff;
+      background: #22c55e;
+    }
+
+    .modal h2 { margin: 0 0 12px; font-size: 24px; }
+
+    .modal-points {
+      font-size: 48px;
+      font-weight: bold;
+      line-height: 1.1;
+      color: #fbbf24;
+    }
+
+    .modal-points span { font-size: 18px; color: #c3cadb; }
+
+    .modal-note { margin: 12px 0 22px; font-size: 14px; color: #c3cadb; }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    /* ===== الموبايل ===== */
+    @media (max-width: 768px) {
+      html, body { height: auto; }
+
+      .title { display: none; }
+      .logo { font-size: 0; gap: 0; }
+
+      .topbar { flex-wrap: wrap; gap: 8px; }
+      .btn { padding: 7px 12px; }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .pane.editor-pane { height: 55vh; min-height: 320px; }
+      .right { grid-template-rows: 320px 180px; }
+      .html-only .right { grid-template-rows: 360px; }
+      .challenge-mode .right { grid-template-rows: 280px auto; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <a href="junior.html" class="btn btn-ghost" id="back">&larr; Back</a>
+    <a href="junior.html" class="logo">
+      <span class="logo-icon">&lt;/&gt;</span>
+      junior code
+    </a>
+    <span class="title">Code editor</span>
+    <span class="spacer"></span>
+    <button class="btn btn-ghost" id="reset" type="button">Reset</button>
+    <button class="btn btn-run" id="run" type="button">Run</button>
+  </header>
+
+  <main class="workspace">
+
+    <!-- المحرر -->
+    <section class="pane editor-pane">
+      <div class="tabs" role="tablist" aria-label="Code files">
+        <button class="tab" role="tab" id="tab-html" data-lang="html" aria-selected="true">HTML</button>
+        <button class="tab" role="tab" id="tab-css" data-lang="css" aria-selected="false">CSS</button>
+        <button class="tab" role="tab" id="tab-js" data-lang="js" aria-selected="false">JavaScript</button>
+      </div>
+
+      <textarea class="editor" id="ed-html" data-lang="html" aria-label="HTML code" spellcheck="false" autocomplete="off" autocapitalize="off"></textarea>
+      <textarea class="editor" id="ed-css" data-lang="css" aria-label="CSS code" spellcheck="false" autocomplete="off" autocapitalize="off" hidden></textarea>
+      <textarea class="editor" id="ed-js" data-lang="js" aria-label="JavaScript code" spellcheck="false" autocomplete="off" autocapitalize="off" hidden></textarea>
+
+      <div class="hint">Your code runs automatically as you type. Press Esc then Tab to leave the editor.</div>
+    </section>
+
+    <!-- المعاينة + الكونسول -->
+    <div class="right">
+      <section class="pane">
+        <div class="pane-head">Preview</div>
+        <iframe id="preview" title="Preview of your code" sandbox="allow-scripts"></iframe>
+      </section>
+
+      <section class="pane" id="console-pane">
+        <div class="pane-head">
+          Console
+          <button class="link-btn" id="clear-console" type="button">Clear</button>
+        </div>
+        <div class="console" id="console" role="log" aria-live="polite"></div>
+      </section>
+    </div>
+
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+    (function () {
+      // ===== الكود الابتدائي =====
+      var STARTER = {
+        html: '<h1>Hello, junior code!</h1>\n<p>Edit the code on the left and see the result here.</p>\n<button id="btn">Click me</button>\n<p id="count">Clicks: 0</p>',
+        css: 'body {\n  font-family: Tahoma, sans-serif;\n  text-align: center;\n  padding: 30px;\n  color: #0b1b4d;\n}\n\nbutton {\n  background: #12b5cb;\n  color: white;\n  border: none;\n  border-radius: 10px;\n  padding: 10px 20px;\n  font-size: 16px;\n  cursor: pointer;\n}\n\nbutton:hover {\n  background: #0e9db0;\n}',
+        js: 'var clicks = 0;\nvar button = document.getElementById("btn");\nvar label = document.getElementById("count");\n\nbutton.addEventListener("click", function () {\n  clicks = clicks + 1;\n  label.textContent = "Clicks: " + clicks;\n  console.log("Button clicked", clicks, "times");\n});'
+      };
+
+      // لو الصفحة اتفتحت بـ ?lang=html (من درس HTML) بنعرض HTML بس من غير CSS وJavaScript
+      var onlyHtml = /[?&]lang=html(&|$)/.test(window.location.search);
+
+      var STORAGE_KEY = 'junior-code-ide-v1';
+      var langs = ['html', 'css', 'js'];
+
+      // ?start=... بيحدد الكود اللي المحرر يفتح بيه (كل درس له مثاله)
+      var startMatch = window.location.search.match(/[?&]start=([a-z]+)/);
+      var startName = startMatch ? startMatch[1] : '';
+
+      var LESSON_STARTERS = {
+        // درس Page structure
+        skeleton: '<!DOCTYPE html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>My first page</title>\n  </head>\n  <body>\n    <h1>Hello, world!</h1>\n    <p>This is my first web page.</p>\n  ' + '<' + '/body>\n' + '<' + '/html>',
+
+        // درس Comments
+        comments: '<!-- This is a comment. The browser ignores it. -->\n<h1>My first page</h1>\n<p>Turn this paragraph into a comment to hide it.</p>\n<p>This paragraph will stay on the page.</p>',
+
+        // درس Text formatting
+        formatting: '<p>This is <strong>very important</strong> text.</p>\n<p>I <em>really</em> like learning HTML.</p>\n<p>Remember to <mark>save your work</mark>.</p>\n<p><small>Terms and conditions apply.</small></p>\n<p>Price: <del>$20</del> <ins>$15</ins></p>\n<p>Water is H<sub>2</sub>O and 3<sup>2</sup> = 9.</p>\n<p>First line<br>Second line</p>',
+
+        // درس Images
+        images: '<!-- 1. This image loads, so you see the picture -->\n<img src="data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22300%22%20height=%22180%22%3E%3Crect%20width=%22300%22%20height=%22180%22%20fill=%22%2312b5cb%22/%3E%3Ccircle%20cx=%22150%22%20cy=%2290%22%20r=%2250%22%20fill=%22%23fbbf24%22/%3E%3C/svg%3E" alt="A yellow circle on a blue background" width="300">\n\n<!-- 2. This file does not exist here, so the browser shows the alt text instead -->\n<img src="sun.jpg" alt="A bright sun in a blue sky" width="300">\n\n<p>Change the alt text of the second image and press Run.</p>'
+      };
+
+      // ===== التحديات: المحرر بيفحص كودك لوحده وهو بيكتب =====
+      var C_OPEN = '<' + '!--';
+      var C_CLOSE = '--' + '>';
+
+      function hasText(el) {
+        return !!el && el.textContent.trim().length > 0;
+      }
+
+      var CHALLENGES = {
+        "html-1": {
+          lesson: "html-lesson-1",
+          title: "Introduce yourself",
+          task: "Write a short page about yourself in the editor.",
+          starter: "<!-- Write your code here -->",
+          checks: [
+          { label: "A heading (h1) with your name", test: function (d, raw) { return hasText(d.querySelector('h1')); } },
+          { label: "A paragraph (p) about you, with at least 5 words", test: function (d, raw) { var p = d.querySelector('p'); return !!p && p.textContent.trim().split(/\s+/).length >= 5; } }
+          ]
+        },
+        "html-2": {
+          lesson: "html-lesson-2",
+          title: "Build the skeleton",
+          task: "Write a complete HTML page from scratch, with every part of the skeleton.",
+          starter: "<!-- Write your page here -->",
+          checks: [
+          { label: "The page starts with a doctype", test: function (d, raw) { return /^\s*<!doctype html>/i.test(raw); } },
+          { label: "The html tag has a lang attribute", test: function (d, raw) { return /<html[^>]*\slang\s*=\s*["'][^"']+["']/i.test(raw); } },
+          { label: "The head has a title with some text", test: function (d, raw) { return /<head[\s>]/i.test(raw) && hasText(d.head.querySelector('title')); } },
+          { label: "The head has a meta charset tag", test: function (d, raw) { return /<head[\s>]/i.test(raw) && !!d.head.querySelector('meta[charset]'); } },
+          { label: "The body has an h1 heading with some text", test: function (d, raw) { return /<body[\s>]/i.test(raw) && hasText(d.body.querySelector('h1')); } }
+          ]
+        },
+        "html-3": {
+          lesson: "html-lesson-3",
+          title: "Hide the secret",
+          task: "Add a comment above the heading, then hide the secret note by turning it into a comment. The first paragraph must stay visible.",
+          starter: "<h1>My secret diary</h1>\n<p>This paragraph is visible.</p>\n<p>This is a secret note. Hide it with a comment.</p>",
+          checks: [
+          { label: "A comment above the heading", test: function (d, raw) { return new RegExp(C_OPEN + '[\\s\\S]*?' + C_CLOSE + '\\s*<h1', 'i').test(raw); } },
+          { label: "The secret note is hidden on the page, but still in your code", test: function (d, raw) { return !/secret note/i.test(d.body.textContent) && /secret note/i.test(raw); } },
+          { label: "The first paragraph is still visible", test: function (d, raw) { return /This paragraph is visible/.test(d.body.textContent); } }
+          ]
+        },
+        "html-4": {
+          lesson: "html-lesson-4",
+          title: "Format the text",
+          task: "Use formatting tags to complete every item in the list below.",
+          starter: "<p>Important: bring your laptop tomorrow.</p>\n<p>The meeting starts at 10:00 and ends at 11:00.</p>\n<p>Water formula: H2O</p>",
+          checks: [
+          { label: "The word \"Important\" is inside a strong tag", test: function (d, raw) { return Array.prototype.some.call(d.querySelectorAll('strong'), function (e) { return /important/i.test(e.textContent); }); } },
+          { label: "The word \"laptop\" is inside an em tag", test: function (d, raw) { return Array.prototype.some.call(d.querySelectorAll('em'), function (e) { return /laptop/i.test(e.textContent); }); } },
+          { label: "The time \"10:00\" is highlighted with a mark tag", test: function (d, raw) { return Array.prototype.some.call(d.querySelectorAll('mark'), function (e) { return e.textContent.indexOf('10:00') !== -1; }); } },
+          { label: "The 2 in H2O is written with a sub tag", test: function (d, raw) { var sub = d.querySelector('sub'); return !!sub && sub.textContent.trim() === '2' && /H2O/.test(d.body.textContent); } }
+          ]
+        },
+        "html-5": {
+          lesson: "html-lesson-5",
+          title: "Add an image",
+          task: "Add an image of the sun below the heading.",
+          starter: "<h1>My favorite place</h1>\n<!-- Add an image of the sun below this line -->",
+          checks: [
+          { label: "An img tag", test: function (d, raw) { return !!d.querySelector('img'); } },
+          { label: "The src is sun.jpg", test: function (d, raw) { var i = d.querySelector('img'); return !!i && i.getAttribute('src') === 'sun.jpg'; } },
+          { label: "The image has an alt text", test: function (d, raw) { var i = d.querySelector('img'); return !!i && (i.getAttribute('alt') || '').trim().length >= 3; } },
+          { label: "The width is 300", test: function (d, raw) { var i = d.querySelector('img'); return !!i && i.getAttribute('width') === '300'; } }
+          ]
+        }
+      };
+
+      var challengeMatch = window.location.search.match(/[?&]challenge=([a-z0-9-]+)/);
+      var challengeId = challengeMatch ? challengeMatch[1] : '';
+      var activeChallenge = null;
+      var challengeComplete = false;
+      var challengeListEl = null;
+      var challengeWinEl = null;
+
+      // لو غيّرت مثال درس، زوّد رقم نسخته هنا عشان الكود القديم المحفوظ ميظهرش
+      var STARTER_VERSIONS = { images: 3 };
+
+      if (onlyHtml) {
+        STORAGE_KEY = 'junior-code-ide-html-v1';
+        langs = ['html'];
+        STARTER.html = '<h1>Hello, world!</h1>\n<p>This is my first web page.</p>';
+
+        // لو الدرس له مثال خاص بيه، المحرر يفتح بيه وبيحفظ كودك في مكان منفصل
+        if (Object.prototype.hasOwnProperty.call(LESSON_STARTERS, startName)) {
+          STORAGE_KEY = 'junior-code-ide-html-' + startName + '-v' + (STARTER_VERSIONS[startName] || 1);
+          STARTER.html = LESSON_STARTERS[startName];
+        }
+        // لو اتفتح من تحدي: الكود الابتدائي بتاع التحدي وتخزين منفصل
+        if (Object.prototype.hasOwnProperty.call(CHALLENGES, challengeId)) {
+          activeChallenge = CHALLENGES[challengeId];
+          STORAGE_KEY = 'junior-code-ide-html-challenge-' + challengeId + '-v1';
+          STARTER.html = activeChallenge.starter;
+        }
+        document.body.classList.add('html-only');
+
+        ['css', 'js'].forEach(function (l) {
+          var t = document.getElementById('tab-' + l);
+          var e = document.getElementById('ed-' + l);
+          if (t) t.remove();
+          if (e) e.remove();
+        });
+
+        var consolePane = document.getElementById('console-pane');
+        if (consolePane) consolePane.remove();
+
+        var titleEl = document.querySelector('.title');
+        if (titleEl) titleEl.textContent = 'Code editor \u00b7 ' + (activeChallenge ? 'Challenge' : 'HTML');
+
+        if (activeChallenge) setupChallenge(activeChallenge);
+      }
+      var editors = {};
+      var tabs = {};
+
+      langs.forEach(function (l) {
+        editors[l] = document.getElementById('ed-' + l);
+        tabs[l] = document.getElementById('tab-' + l);
+      });
+
+      var preview = document.getElementById('preview');
+      var consoleEl = document.getElementById('console');
+
+      // ===== حفظ واسترجاع الكود (لو المتصفح بيسمح) =====
+      function load() {
+        var saved = null;
+        try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) {}
+        langs.forEach(function (l) {
+          editors[l].value = saved && typeof saved[l] === 'string' ? saved[l] : STARTER[l];
+        });
+      }
+
+      function save() {
+        var data = {};
+        langs.forEach(function (l) { data[l] = editors[l].value; });
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
+      }
+
+      // ===== التابات =====
+      function showTab(lang) {
+        langs.forEach(function (l) {
+          var active = l === lang;
+          editors[l].hidden = !active;
+          tabs[l].setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        editors[lang].focus();
+      }
+
+      langs.forEach(function (l) {
+        tabs[l].addEventListener('click', function () { showTab(l); });
+      });
+
+      // ===== الكونسول =====
+      function clearConsole() {
+        if (!consoleEl) return;
+        consoleEl.innerHTML = '';
+        var d = document.createElement('div');
+        d.className = 'empty';
+        d.textContent = 'console.log() output will appear here.';
+        d.id = 'console-empty';
+        consoleEl.appendChild(d);
+      }
+
+      function addLine(level, text) {
+        if (!consoleEl) return;
+        var empty = document.getElementById('console-empty');
+        if (empty) empty.remove();
+        var d = document.createElement('div');
+        d.className = level;
+        d.textContent = text;
+        consoleEl.appendChild(d);
+        consoleEl.scrollTop = consoleEl.scrollHeight;
+      }
+
+      window.addEventListener('message', function (e) {
+        if (e.source !== preview.contentWindow) return;
+        var m = e.data;
+        if (!m || m.type !== 'junior-console') return;
+        addLine(m.level === 'warn' || m.level === 'error' ? m.level : 'log', String(m.text));
+      });
+
+      var clearBtn = document.getElementById('clear-console');
+      if (clearBtn) clearBtn.addEventListener('click', clearConsole);
+
+      // ===== تشغيل الكود =====
+      // سكريبت صغير بيتحط جوه المعاينة عشان يبعت console.log والأخطاء للكونسول
+      var HOOK =
+        '(function(){' +
+        'function fmt(a){return Array.prototype.map.call(a,function(x){' +
+        'if(typeof x==="object"&&x!==null){try{return JSON.stringify(x)}catch(e){return String(x)}}' +
+        'return String(x)}).join(" ")}' +
+        'function send(l,t){parent.postMessage({type:"junior-console",level:l,text:t},"*")}' +
+        '["log","warn","error"].forEach(function(l){var o=console[l];' +
+        'console[l]=function(){send(l,fmt(arguments));o.apply(console,arguments)}});' +
+        'window.addEventListener("error",function(e){send("error",e.message)});' +
+        '})();';
+
+      // بنبني وسوم السكريبت من حتت عشان مفيش نص يشبه وسم الإغلاق جوه الكود
+      var OPEN_SCRIPT = '<' + 'script>';
+      var CLOSE_SCRIPT = '<' + '/' + 'script>';
+      var CLOSE_PATTERN = new RegExp('<' + '/' + 'script', 'gi');
+
+      function run() {
+        clearConsole();
+        // لو المستخدم كتب وسم إغلاق سكريبت جوه الكود بتاعه، بنكسره عشان ميقفلش الصفحة
+        var js = (editors.js ? editors.js.value : '').replace(CLOSE_PATTERN, '<' + '\\' + '/' + 'script');
+        var doc =
+          '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+          '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+          '<style>' + (editors.css ? editors.css.value : '') + '</style></head><body>' +
+          editors.html.value +
+          OPEN_SCRIPT + HOOK + CLOSE_SCRIPT +
+          OPEN_SCRIPT + js + CLOSE_SCRIPT +
+          '<' + '/body>' + '<' + '/html>';
+        // لو كتبت هيكل صفحة كامل (DOCTYPE أو html) نعرضه زي ما هو من غير ما نلفه في صفحة تانية
+        if (onlyHtml && /<!doctype|<html[\s>]/i.test(editors.html.value)) {
+          doc = editors.html.value;
+        }
+        preview.srcdoc = doc;
+        evaluateChallenge();
+      }
+
+      var timer = null;
+      function scheduleRun() {
+        save();
+        clearTimeout(timer);
+        timer = setTimeout(run, 600);
+      }
+
+      langs.forEach(function (l) {
+        editors[l].addEventListener('input', scheduleRun);
+      });
+
+      document.getElementById('run').addEventListener('click', function () {
+        if (challengeComplete) {
+          finishChallenge();
+          return;
+        }
+        clearTimeout(timer);
+        save();
+        run();
+      });
+
+      document.getElementById('reset').addEventListener('click', function () {
+        if (!window.confirm('Reset all code to the starter example?')) return;
+        langs.forEach(function (l) { editors[l].value = STARTER[l]; });
+        save();
+        run();
+      });
+
+      // ===== زرار Tab يكتب مسافتين جوه المحرر =====
+      var trapTab = true;
+      langs.forEach(function (l) {
+        var ed = editors[l];
+        ed.addEventListener('focus', function () { trapTab = true; });
+        ed.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') { trapTab = false; return; }
+          if (e.key === 'Tab' && trapTab && !e.shiftKey) {
+            e.preventDefault();
+            var s = ed.selectionStart, end = ed.selectionEnd;
+            ed.value = ed.value.slice(0, s) + '  ' + ed.value.slice(end);
+            ed.selectionStart = ed.selectionEnd = s + 2;
+            scheduleRun();
+          }
+        });
+      });
+
+      // ===== لوحة التحدي: المطلوب + قايمة الشروط اللي بتتعلّم لوحدها =====
+      function setupChallenge(c) {
+        var right = document.querySelector('.right');
+        if (!right) return;
+
+        var pane = document.createElement('section');
+        pane.className = 'pane';
+        pane.id = 'challenge-pane';
+
+        var head = document.createElement('div');
+        head.className = 'pane-head';
+        head.textContent = 'Challenge: ' + c.title;
+
+        var body = document.createElement('div');
+        body.className = 'challenge-body';
+
+        var task = document.createElement('p');
+        task.className = 'challenge-task';
+        task.textContent = c.task;
+
+        challengeListEl = document.createElement('ul');
+        challengeListEl.className = 'challenge-list';
+        c.checks.forEach(function (check) {
+          var li = document.createElement('li');
+          li.textContent = check.label;
+          challengeListEl.appendChild(li);
+        });
+
+        challengeWinEl = document.createElement('div');
+        challengeWinEl.className = 'challenge-win';
+        challengeWinEl.textContent = 'Challenge complete! Press Finish to collect your points.';
+        challengeWinEl.hidden = true;
+
+        body.appendChild(task);
+        body.appendChild(challengeListEl);
+        body.appendChild(challengeWinEl);
+        pane.appendChild(head);
+        pane.appendChild(body);
+        right.appendChild(pane);
+
+        document.body.classList.add('challenge-mode');
+      }
+
+      function saveChallengeDone(id) {
+        try {
+          var data = JSON.parse(localStorage.getItem('junior-code-challenges-v1')) || {};
+          data[id] = true;
+          localStorage.setItem('junior-code-challenges-v1', JSON.stringify(data));
+        } catch (e) {}
+      }
+
+      function evaluateChallenge() {
+        if (!activeChallenge || !challengeListEl) return;
+
+        var raw = editors.html.value;
+        var d = new DOMParser().parseFromString(raw, 'text/html');
+        var items = challengeListEl.children;
+        var passed = 0;
+
+        activeChallenge.checks.forEach(function (check, i) {
+          var ok = false;
+          try { ok = !!check.test(d, raw); } catch (e) {}
+          items[i].className = ok ? 'pass' : '';
+          if (ok) passed++;
+        });
+
+        var allDone = passed === activeChallenge.checks.length;
+        challengeWinEl.hidden = !allDone;
+        challengeComplete = allDone;
+
+        var runBtn = document.getElementById('run');
+        if (runBtn) {
+          runBtn.textContent = allDone ? 'Finish' : 'Run';
+          runBtn.classList.toggle('finish', allDone);
+        }
+      }
+
+      // ===== زرار Finish: بيسجّل التحدي ويدّيك النقط ويفتح مربع في النص =====
+      var POINTS_KEY = 'junior-code-points-v1';
+
+      function pointsFor(id) {
+        var table = window.JUNIOR_POINTS;
+        return table && typeof table[id] === 'number' ? table[id] : 10;
+      }
+
+      function readPoints() {
+        try { return JSON.parse(localStorage.getItem(POINTS_KEY)) || {}; } catch (e) { return {}; }
+      }
+
+      function totalPoints(data) {
+        var sum = 0;
+        Object.keys(data).forEach(function (key) { sum += Number(data[key]) || 0; });
+        return sum;
+      }
+
+      function finishChallenge() {
+        if (!activeChallenge) return;
+
+        var data = readPoints();
+        var firstTime = !Object.prototype.hasOwnProperty.call(data, challengeId);
+        var earned = firstTime ? pointsFor(challengeId) : data[challengeId];
+
+        // النقط بتتحسب مرة واحدة بس لكل تحدي
+        if (firstTime) {
+          data[challengeId] = earned;
+          try { localStorage.setItem(POINTS_KEY, JSON.stringify(data)); } catch (e) {}
+        }
+
+        saveChallengeDone(challengeId);
+        showFinishModal(earned, firstTime, totalPoints(data));
+      }
+
+      function showFinishModal(earned, firstTime, total) {
+        var backdrop = document.createElement('div');
+        backdrop.className = 'modal-backdrop';
+
+        var box = document.createElement('div');
+        box.className = 'modal';
+        box.setAttribute('role', 'dialog');
+        box.setAttribute('aria-modal', 'true');
+        box.setAttribute('aria-labelledby', 'modal-title');
+
+        var icon = document.createElement('div');
+        icon.className = 'modal-icon';
+        icon.textContent = '\u2713';
+
+        var title = document.createElement('h2');
+        title.id = 'modal-title';
+        title.textContent = 'Challenge complete!';
+
+        var points = document.createElement('div');
+        points.className = 'modal-points';
+        points.textContent = firstTime ? '+' + earned : String(earned);
+        var pointsLabel = document.createElement('span');
+        pointsLabel.textContent = ' points';
+        points.appendChild(pointsLabel);
+
+        var note = document.createElement('p');
+        note.className = 'modal-note';
+        note.textContent = firstTime
+          ? 'Your total: ' + total + ' points'
+          : 'You already earned these points before. Your total: ' + total + ' points';
+
+        var actions = document.createElement('div');
+        actions.className = 'modal-actions';
+
+        var back = document.createElement('a');
+        back.className = 'btn btn-run';
+        back.href = activeChallenge.lesson + '.html#challenge';
+        back.textContent = 'Back to lesson';
+
+        var keep = document.createElement('button');
+        keep.type = 'button';
+        keep.className = 'btn btn-ghost';
+        keep.textContent = 'Keep editing';
+
+        actions.appendChild(back);
+        actions.appendChild(keep);
+        box.appendChild(icon);
+        box.appendChild(title);
+        box.appendChild(points);
+        box.appendChild(note);
+        box.appendChild(actions);
+        backdrop.appendChild(box);
+        document.body.appendChild(backdrop);
+        back.focus();
+
+        function close() {
+          backdrop.remove();
+          document.removeEventListener('keydown', onKey);
+          var runBtn = document.getElementById('run');
+          if (runBtn) runBtn.focus();
+        }
+
+        function onKey(e) {
+          if (e.key === 'Escape') close();
+        }
+
+        keep.addEventListener('click', close);
+        backdrop.addEventListener('click', function (e) {
+          if (e.target === backdrop) close();
+        });
+        document.addEventListener('keydown', onKey);
+      }
+
+      // ===== زرار الرجوع: يرجّعك للصفحة اللي جيت منها (درس، كورس...) =====
+      var backBtn = document.getElementById('back');
+      if (backBtn) {
+        backBtn.addEventListener('click', function (e) {
+          var cameFromThisSite = false;
+          try {
+            cameFromThisSite = document.referrer !== '' &&
+              new URL(document.referrer).hostname === window.location.hostname;
+          } catch (err) {}
+
+          // لو جيت من صفحة في نفس الموقع نرجع لها، وإلا الرابط العادي بيودّيك للرئيسية
+          if (cameFromThisSite && window.history.length > 1) {
+            e.preventDefault();
+            window.history.back();
+          }
+        });
+      }
+
+      load();
+      run();
+    })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comments | junior code</title>
+  <link rel="stylesheet" href="junior.css">
+</head>
+<body>
+
+  <header class="navbar">
+    <a href="junior.html" class="logo">
+      <span class="logo-icon">&lt;/&gt;</span>
+      junior code
+    </a>
+    <span class="spacer"></span>
+    <a href="course-html.html" class="login">Back to course</a>
+  </header>
+
+  <main class="lesson-page" data-lesson="html-lesson-3">
+    <span class="tag">HTML basics &middot; Lesson 3 of <span data-lessons="html">14</span></span>
+    <h1>Comments</h1>
+    <div class="lesson-meta">15 min</div>
+
+    <div class="lesson-body">
+      <p>A comment is a note you write inside your code, for yourself or for other people. The browser ignores it, so visitors never see it on the page.</p>
+      <h2>How to write a comment</h2>
+      <p>A comment starts with <code>&lt;!--</code> and ends with <code>--&gt;</code>. Everything in between is part of the comment:</p>
+      <pre><code>&lt;!-- This is a comment --&gt;</code></pre>
+      <h2>Comments are not shown</h2>
+      <p>In this example, only the heading appears on the page. Both comments stay hidden:</p>
+      <pre><code>&lt;!-- This is the main title of the page --&gt;
+&lt;h1&gt;My first page&lt;/h1&gt;
+&lt;!-- Remember to add a paragraph here --&gt;</code></pre>
+      <h2>Why use comments</h2>
+      <ul>
+        <li>To explain what a part of the page does.</li>
+        <li>To leave a reminder for yourself, like what you still need to add.</li>
+        <li>To divide a long page into clear sections.</li>
+      </ul>
+      <h2>Hide code without deleting it</h2>
+      <p>You can turn code into a comment to hide it for a moment. This is called commenting out. The browser skips it, and you can bring it back any time:</p>
+      <pre><code>&lt;h1&gt;My first page&lt;/h1&gt;
+&lt;!-- &lt;p&gt;This paragraph is hidden for now.&lt;/p&gt; --&gt;</code></pre>
+      <h2>Comments on several lines</h2>
+      <p>A comment can take more than one line:</p>
+      <pre><code>&lt;!--
+  Navigation menu
+  Links to the main pages
+--&gt;</code></pre>
+      <h2>Comments are not private</h2>
+      <p>Anyone can open the source of your page and read your comments. Never write passwords or secrets in them.</p>
+      <h2>Good habits</h2>
+      <ul>
+        <li>Keep comments short and useful.</li>
+        <li>Do not comment things that are obvious.</li>
+        <li>Update or delete a comment when the code changes.</li>
+      </ul>
+      <h2>Quick recap</h2>
+      <ul>
+        <li>A comment starts with <code>&lt;!--</code> and ends with <code>--&gt;</code>.</li>
+        <li>The browser ignores comments, but anyone can read them in the page source.</li>
+        <li>You can comment out code to hide it without deleting it.</li>
+      </ul>
+
+      <div class="callout">
+        <h2>Try it yourself</h2>
+        <p>The editor opens with an example. Press Run, then write your own comment above the heading and turn the first paragraph into a comment. The paragraph disappears from the preview, but the code is still there.</p>
+        <a href="ide.html?lang=html&amp;start=comments" class="cta">Open the code editor</a>
+      </div>
+
+      <section class="challenge-box" id="challenge" data-challenge="html-3">
+        <span class="tag">Challenge</span>
+        <span class="challenge-done">&#10003; Completed</span>
+        <span class="challenge-worth">Worth <span data-points="html-3">10</span> points</span>
+        <h2>Hide the secret</h2>
+        <p>Add a comment above the heading, then hide the secret note by turning it into a comment. The first paragraph must stay visible.</p>
+        <ul class="challenge-reqs">
+        <li>A comment above the heading</li>
+        <li>The secret note is hidden on the page, but still in your code</li>
+        <li>The first paragraph is still visible</li>
+        </ul>
+        <details>
+          <summary>Need a hint?</summary>
+          <p>A comment starts with a less-than sign, an exclamation mark and two dashes, and ends with two dashes and a greater-than sign. Put the whole secret paragraph inside one comment.</p>
+        </details>
+        <a href="ide.html?lang=html&amp;challenge=html-3" class="cta">Start the challenge</a>
+      </section>
+    </div>
+
+    <nav class="lesson-nav" aria-label="Lesson navigation">
+      <a href="html-lesson-2.html" class="lesson-btn">&larr; Previous lesson</a>
+      <a href="html-lesson-4.html" class="lesson-btn">Next: Text formatting &rarr;</a>
+    </nav>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="progress.js"></script>
+
+</body>
+</html>
